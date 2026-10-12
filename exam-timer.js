@@ -1,4 +1,4 @@
-(()=>{const exams=[
+(()=>{const theme=document.createElement('link');theme.rel='stylesheet';theme.href='studyai-theme.css?v=1';document.head.appendChild(theme);const exams=[
 {d:'2026-10-26',n:'מבחן 1 באנגלית'},
 {d:'2026-10-28',n:'מבחן 1 במדעים'},
 {d:'2026-11-03',n:'מבחן 1 במתמטיקה'},
