@@ -21,14 +21,14 @@ function render(){
  $('bar').style.width=((pos+1)/questions.length*100)+'%';
  $('questionLabel').textContent=isEn?'מה הפירוש הנכון של המילה?':'איזו מילה באנגלית מתאימה לפירוש?';
  $('qword').textContent=isEn?w[0]:w[1];$('qword').className='qword'+(isEn?' en':'');
- const ids=shuffle([q.i,...wrongs(q.i)]);
+ const ids=pending&&Array.isArray(pending.ids)&&pending.ids.length===4?pending.ids:shuffle([q.i,...wrongs(q.i)]);
  $('answers').innerHTML='';
  ids.forEach((id,index)=>{
  const b=document.createElement('button');b.className='answer';b.dataset.wordIndex=String(id);
  b.textContent=['א. ','ב. ','ג. ','ד. '][index]+(isEn?words[id][1]:words[id][0]);if(!isEn)b.dir='ltr';
  b.onclick=()=>{
  if(locked)return;locked=true;const ok=id===q.i;
- if(ok)score++;pending={ok,picked:id};saveProgress();
+ if(ok)score++;pending={ok,picked:id,ids:[...ids]};saveProgress();
  markAnswered(q.i,index);
  };$('answers').appendChild(b)
  });
