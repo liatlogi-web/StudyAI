@@ -12,123 +12,150 @@ h1{margin:5px 0 10px}.muted{color:#677b91}.arabic{font-family:"Geeza Pro","Noto 
 #result[hidden],#quiz[hidden]{display:none}.restartbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center}.restartbar button{background:#edf5ff;color:#1768bb;border:1px solid #b7d3ef;border-radius:12px;padding:10px;font:inherit;cursor:pointer}
 .help{background:#f1f7fd;padding:15px;border-radius:14px;font-size:15px}.help[hidden]{display:none}.score{font-size:46px;color:#1177cb;font-weight:950}
 @media(max-width:640px){.options{grid-template-columns:1fr}.panel{padding:17px}.arabic{font-size:29px}.answer.ar{font-size:27px}.prompt{font-size:20px}}
-</style></head><body><header><strong>🇸🇦 ערבית — תרגול למבחן</strong><a href="arabic.html">כל נושאי ערבית</a></header><main><section class="panel"><h1 id="title">תרגול ערבית</h1><p>לפי הדף למבחן 18.11: מילים, אותיות, ניקוד, תאריכים ותרגום. אחרי כל תשובה יש הסבר. ההתקדמות נשמרת בכינוי שלך במכשיר הזה.</p><div class="restartbar"><span class="pill" id="topicLabel"></span><span class="pill" id="poolCount"></span><button id="reset" type="button">🔄 התחל סבב חדש</button></div></section><section class="panel" id="quiz"><p class="muted" id="counter"></p><div class="progress"><div id="bar"></div></div><div id="prompt" class="prompt"></div><div id="arabicPrompt" class="arabic"></div><p class="muted" id="hint"></p><div id="options" class="options"></div><div id="feedback" class="feedback" hidden></div><button class="next" id="next" hidden>לשאלה הבאה ←</button></section><section id="result" class="panel" hidden></section><section class="panel"><details><summary style="cursor:pointer;font-weight:900">💡 טיפים קצרים למבחן</summary><div class="help"><p>בערבית כותבים מימין לשמאל. הסימן <span class="arabic">َ</span> הוא פתחה, <span class="arabic">ِ</span> כסרה, <span class="arabic">ُ</span> דמה ו־<span class="arabic">ْ</span> סוכון.</p><p>דוגמה לחיבור אותיות: <span class="arabic">د + ا + ر = دار</span></p><p>דוגמה לתאריך: <span class="arabic">٢٧/٤/١٩٦٢</span> הוא 27/4/1962.</p></div></details></section></main><script>
-(()=>{"use strict";
-const WORDS=[["دَار","בית","دار"],["وِدَاد","ודאד (שם של בת)","وداد"],["دُرُوز","דרוזים","دروز"],["أَرْز","ארזים","أرز"],["وَرْد","ורדים","ورد"],["دَاوُد","דאוד (שם של בן)","داود"],["زَارَ","ביקר","زار"],["أَرَادَ","רצה","أراد"],["أَوْ","או","أو"],["رَادَار","רדאר","رادار"],["دَوْر","תור / סיבוב","دور"]];
-const topicNames={all:"כל הנושאים",letters:"אותיות וספירה",words:"אוצר מילים",vowels:"ניקוד וחיבור אותיות",sentences:"משפטים ותרגום",dates:"מספרים ותאריכים"};
-const pool=[],add=(topic,question,arabic,options,answer,explain,arOptions=false)=>{if(options.length!==4||answer<0||answer>3||new Set(options).size<4)return;pool.push({topic,question,arabic,options,answer,explain,arOptions,id:pool.length})};
-const clean=s=>s.normalize("NFD").replace(/[\u064B-\u065F]/g,"").replace(/[أإآ]/g,"ا");
-const letters=[["ا","אליף"],["و","ואו"],["ر","רא"],["د","דאל"],["ز","זאי"],["ن","נון"]];
-const words=["زار داود دار وداد","أراد داود ورد","دار وداد","رز وورد","داود زار دارا","روز وداد داود","دور دار زار","ورد أرز دور","دار دور ورد","زار داود روز","أراد داود أن يزور دار وداد","وداد داود","دار أرز روز","داود أراد وردا","زار داود ورداد","روز زار داود"];
-// בדיוק כמו בתרגיל שבדף: כמה פעמים מופיעה אות במשפט, כולל ניקוד וסימני אליף.
-for(let i=0;i<words.length;i++)for(const [char,name] of letters){
- const count=[...clean(words[i])].filter(x=>x===char).length;
- const variants=[count,Math.max(0,count-1),count+1,count+2].map(String);
- if(new Set(variants).size<4){variants[1]=String(count+3)}
- if(new Set(variants).size<4)continue;
- let n=(i+letters.indexOf(letters.find(x=>x[0]===char)))%4,opts=[...variants.slice(1)];opts.splice(n,0,String(count));
- add("letters","כמה פעמים מופיעה האות "+name+" ("+char+") במשפט הבא?",words[i],opts,n,"סופרים רק את האות "+char+" בתוך המשפט. התשובה: "+count+".");
-}
-for(const [char,name] of letters){const opts=[char,...letters.filter(x=>x[0]!==char).slice(0,3).map(x=>x[0])];add("letters","איזו אות היא "+name+"?", "",opts,0,"האות "+name+" היא "+char+".",true)}
-for(const [char,name] of letters){const opts=[name,...letters.filter(x=>x[0]!==char).slice(0,3).map(x=>x[1])];add("letters","מה שם האות המוצגת?",char,opts,0,char+" היא "+name+".")}
-for(let i=0;i<WORDS.length;i++){
- const [ar,he]=WORDS[i],others=WORDS.filter((_,j)=>j!==i);
- const choices=[he,...[1,4,7].map(j=>others[(i+j)%others.length][1])];
- if(new Set(choices).size===4)add("words","בחר את התרגום הנכון למילה בערבית:",ar,choices,0,ar+" = "+he+".");
- const letters=[WORDS[i][0],...others.slice(0,3).map(w=>w[0])];
- const arabicChoices=[ar,...others.filter(w=>w[0]!==ar).slice(0,3).map(w=>w[0])];
- add("words","איך כותבים בערבית: "+he+"?","",arabicChoices,0,he+" = "+ar+".",true)
-}
-const pairs=[["דאוד","داود"],["ודאד","وداد"],["רוז","روز"],["דאר","دار"],["רדאר","رادار"],["ארז","أرز"],["ורד","ورد"],["דוז","دوز"],["דוד","دود"],["דאר ודאד","دار وداد"]];
-for(let i=0;i<pairs.length;i++){
- let correct=pairs[i][1],wrong=pairs.filter((_,j)=>j!==i).slice(i?0:1,i?3:4).map(x=>x[1]);
- if(wrong.length===3)add("words","איזה כתיב בערבית מתאים ל־"+pairs[i][0]+"?","",[correct,...wrong],0,pairs[i][0]+" ← "+correct,true)
-}
-const vowels=[["َ","פתחה","צליל a קצר"],["ِ","כסרה","צליל i קצר"],["ُ","דמה","צליל u קצר"],["ْ","סוכון","בלי תנועה"]];
-for(let i=0;i<6;i++)for(const [symbol,name,meaning] of vowels){
- const letter=letters[i][0],wrong=vowels.filter(x=>x[0]!==symbol).map(x=>x[1]);
- add("vowels","איזה סימן ניקוד מופיע מעל או מתחת לאות?",letter+symbol,[name,...wrong],0,name+": "+meaning+".")
-}
-for(let i=0;i<6;i++)for(const [sym,name,meaning] of vowels){
- const opts=[letterName(i)+" עם "+name,...vowels.filter(v=>v[0]!==sym).map(v=>letterName(i)+" עם "+v[1])];
- add("vowels","איך קוראים לצירוף האות והניקוד?",letters[i][0]+sym,opts,0,letters[i][0]+sym+" = "+name+" ("+meaning+").")
-}
-function letterName(i){return letters[i][1]}
-const combine=[["د + ا + ر","دار"],["ز + ا + ر","زار"],["د + و + ر","دور"],["و + ر + د","ورد"],["د + ا + و + د","داود"],["و + د + ا + د","وداد"],["ر + ا + د + ا + ر","رادار"],["أ + ر + ز","أرز"],["ر + و + ز","روز"],["أ + و","أو"],["د + ر + و + ز","دروز"],["أ + ر + ا + د","أراد"]];
-for(let i=0;i<combine.length;i++){
-const [parts,correct]=combine[i],other=combine.filter((_,j)=>j!==i);
-const wrong=[other[(i+1)%other.length][1],other[(i+3)%other.length][1],other[(i+5)%other.length][1]];
-if(new Set([correct,...wrong]).size===4)add("vowels","חבר את האותיות לפי הסדר. איזו מילה מתקבלת?",parts,[correct,...wrong],0,"מחברים מימין לשמאל: "+parts+" = "+correct+".",true)
-}
-const phrases=[
-["زَارَ دَاوُدُ دَارَ وِدَادَ","דאוד ביקר בבית של ודאד"],
-["زَارَ دَاوُدُ دَارًا","דאוד ביקר בבית"],
-["أَرَادَ دَاوُدُ وَرْدًا","דאוד רצה ורד"],
-["دَارُ وِدَادَ","הבית של ודאד"],
-["دَاوُدُ زَارَ دَارًا","דאוד ביקר בבית"],
-["أَرَادَتْ وِدَادُ وَرْدًا","ודאד רצתה ורד"],
-["زَارَ دَاوُدُ وِدَادَ","דאוד ביקר את ודאד"],
-["وِدَادُ وَدَاوُدُ","ודאד ודאוד"],
-["دَارٌ أَوْ وَرْدٌ","בית או ורד"],
-["زَارَ دَاوُدُ دَارَ رُوزَ","דאוד ביקר בבית של רוז"],
-["أَرَادَ دَاوُدُ دَارًا","דאוד רצה בית"],
-["وَرْدُ وِدَادَ","הוורדים של ודאד"],
-["دَاوُدُ وَرُوزُ","דאוד ורוז"],
-["أَرْزٌ وَوَرْدٌ","ארזים וורדים"],
-["رَادَارٌ","רדאר"],
-["أَوْ دَارٌ","או בית"]
+</style></head><body><header><strong>🇸🇦 ערבית — תרגול למבחן</strong><a href="arabic.html">כל נושאי ערבית</a></header><main><section class="panel"><h1 id="title">תרגול ערבית</h1><p>לפי הדף למבחן 18.11: מילים, אותיות, ניקוד, תאריכים ותרגום. אחרי כל תשובה יש הסבר. ההתקדמות נשמרת בכינוי שלך במכשיר הזה.</p><div class="restartbar"><span class="pill" id="topicLabel"></span><span class="pill" id="poolCount"></span><button id="reset" type="button">🔄 התחל סבב חדש</button></div></section><section class="panel" id="quiz"><p class="muted" id="counter"></p><div class="progress"><div id="bar"></div></div><div id="prompt" class="prompt"></div><div id="arabicPrompt" class="arabic"></div><p class="muted" id="hint"></p><div id="options" class="options"></div><div id="feedback" class="feedback" hidden></div><button class="next" id="next" hidden>לשאלה הבאה ←</button></section><section id="result" class="panel" hidden></section><section class="panel"><details><summary style="cursor:pointer;font-weight:900">💡 טיפים קצרים למבחן</summary><div class="help"><p>בערבית כותבים מימין לשמאל. הסימן <span class="arabic">َ</span> הוא פתחה, <span class="arabic">ِ</span> כסרה, <span class="arabic">ُ</span> דמה ו־<span class="arabic">ْ</span> סוכון.</p><p>דוגמה לחיבור אותיות: <span class="arabic">د + ا + ر = دار</span></p><p>דוגמה לתאריך: <span class="arabic">٢٧/٤/١٩٦٢</span> הוא 27/4/1962.</p></div></details></section></main><script>(()=>{
+"use strict";
+// חומר סגור: רק מילים, אותיות, משפטים ותאריכים שמופיעים בדפי המבחן שהועלו.
+const vocab=[
+{ar:"دَار",he:"בית"},
+{ar:"وِدَاد",he:"ודאד (שם של בת)"},
+{ar:"دُرُوز",he:"דרוזים"},
+{ar:"أَرْز",he:"ארזים"},
+{ar:"وَرْد",he:"ורדים"},
+{ar:"دَاوُد",he:"דאוד (שם של בן)"},
+{ar:"زَارَ",he:"ביקר"},
+{ar:"أَرَادَ",he:"רצה"},
+{ar:"أَوْ",he:"או"},
+{ar:"رَادَار",he:"רדאר"}
 ];
-for(let i=0;i<phrases.length;i++){
- const [ar,he]=phrases[i],others=phrases.filter((_,j)=>j!==i);
- const wrong=[others[i%others.length][1],others[(i+4)%others.length][1],others[(i+7)%others.length][1]];
- if(new Set([he,...wrong]).size!==4)continue;
- add("sentences","מה פירוש המשפט הבא בעברית?",ar,[he,...wrong],0,ar+" פירושו: "+he+".");
+const letters=[["ا","אליף"],["ر","רא"],["ز","זאי"],["د","דאל"],["و","ואו"]];
+const vowels=[["َ","פתחה","a"],["ِ","כסרה","i"],["ُ","דמה","u"],["ْ","סוכון","ללא תנועה"]];
+const sentences=[
+{ar:"دَار دَاوُد",he:"הבית של דאוד"},
+{ar:"أَرْز أَوْ وَرْد",he:"ארזים או ורדים"},
+{ar:"زَارَ دَاوُد وِدَاد",he:"דאוד ביקר את ודאד"},
+{ar:"أَرَادَ دَاوُد أَرْز",he:"דאוד רצה ארזים"},
+{ar:"زَارَ دَاوُد دُرُوز",he:"דאוד ביקר דרוזים"}
+];
+const exactSentences=["بنوت وبنات دْروز من داري","بنوت داود وبنوات دروز من داري"];
+const dates=["27/4/1962","16/10/2026"];
+const numeral="٠١٢٣٤٥٦٧٨٩",toArabic=s=>String(s).replace(/[0-9]/g,d=>numeral[Number(d)]);
+const norm=s=>s.normalize("NFD").replace(/[\u064B-\u065F\u0670]/g,"").replace(/[أإآ]/g,"ا");
+const questions=[];
+function add(topic,title,ar,answers,correct,explanation,arOptions=false){
+ if(answers.length!==4||new Set(answers).size!==4||correct<0||correct>3)throw Error("Invalid question "+title);
+ questions.push({topic,title,ar,answers,correct,explanation,arOptions,id:questions.length})
 }
-for(let i=0;i<phrases.length;i++){
- const [ar,he]=phrases[i],others=phrases.filter((_,j)=>j!==i);
- let w=[others[(i+2)%others.length][0],others[(i+5)%others.length][0],others[(i+9)%others.length][0]];
- if(new Set([ar,...w]).size===4)add("sentences","איזה משפט בערבית מתאים לתרגום הבא?\n"+he,"",[ar,...w],0,he+" ← "+ar+".",true)
+function four(correct,others){return [correct,...others.filter(x=>x!==correct).slice(0,3)]}
+function rotate(array,idx){let a=[...array];for(let i=0;i<idx%4;i++)a.push(a.shift());return {choices:a,answer:(4-idx%4)%4}}
+for(let i=0;i<vocab.length;i++){
+ const w=vocab[i],others=vocab.filter((_,j)=>j!==i),wrong=[others[i%others.length],others[(i+3)%others.length],others[(i+6)%others.length]];
+ const c1=rotate(four(w.he,wrong.map(x=>x.he)),i);
+ add("words","בחר את התרגום של המילה בערבית:",w.ar,c1.choices,c1.answer,w.ar+" = "+w.he);
+ const c2=rotate(four(w.ar,wrong.map(x=>x.ar)),i+1);
+ add("words","איך כותבים בערבית: "+w.he+"?","",c2.choices,c2.answer,w.he+" = "+w.ar,true);
+ const c3=rotate(four(w.he,others.slice(-3).map(x=>x.he)),i+2);
+ add("words","התאם את הכרטיס למילה:",w.ar,c3.choices,c3.answer,w.ar+" = "+w.he);
 }
-const numerals="٠١٢٣٤٥٦٧٨٩",toAr=s=>String(s).replace(/[0-9]/g,c=>numerals[Number(c)]);
+for(let i=0;i<letters.length;i++){
+ const [symbol,name]=letters[i],others=letters.filter(x=>x[0]!==symbol);
+ const a=rotate(four(name,others.map(x=>x[1])),i);
+ add("letters","מה שם האות הבאה?",symbol,a.choices,a.answer,symbol+" היא האות "+name);
+ const b=rotate(four(symbol,others.map(x=>x[0])),i+1);
+ add("letters","מצא את האות "+name,"",b.choices,b.answer,name+" = "+symbol,true);
+}
+const countWords=[...vocab.map(x=>x.ar),...sentences.map(x=>x.ar),...exactSentences];
+for(let i=0;i<countWords.length;i++){
+ const phrase=countWords[i];
+ for(let j=0;j<letters.length;j++){
+  const [symbol,name]=letters[j],count=[...norm(phrase)].filter(c=>c===symbol).length;
+  const others=[0,1,2,3,4,5,6,7,8,9].filter(n=>n!==count).sort((a,b)=>Math.abs(a-count)-Math.abs(b-count)).slice(0,3).map(String);
+  const c=rotate(four(String(count),others),i+j);
+  add("letters","כמה פעמים מופיעה האות "+name+" ("+symbol+") בקטע?",phrase,c.choices,c.answer,"נספור את האות "+symbol+" ללא ניקוד: "+count+".");
+ }
+}
+for(let i=0;i<letters.length;i++){
+ const [symbol,name]=letters[i];
+ for(let j=0;j<vowels.length;j++){
+  const [mark,vowel,meaning]=vowels[j];
+  const c=rotate(four(vowel,vowels.filter(x=>x[1]!==vowel).map(x=>x[1])),i+j);
+  add("vowels","זהה את התנועה שמופיעה עם האות:",symbol+mark,c.choices,c.answer,vowel+" הוא "+meaning+".");
+ }
+}
+const spelling=[["דאל + אליף + רא","دَار"],["זאי + אליף + רא","زَار"],["ואו + דאל + אליף + דאל","وِدَاد"],["דאל + אליף + ואו + דאל","دَاوُد"],["אליף + רא + זאי","أَرْز"],["ואו + רא + דאל","وَرْد"],["דאל + רא + ואו + זאי","دُرُوز"],["רא + אליף + דאל + אליף + רא","رَادَار"]];
+for(let i=0;i<spelling.length;i++){
+ const [name,answer]=spelling[i],wrong=spelling.filter((_,j)=>j!==i);
+ const c=rotate(four(answer,[wrong[i%wrong.length][1],wrong[(i+2)%wrong.length][1],wrong[(i+4)%wrong.length][1]]),i);
+ add("vowels","חבר את האותיות למילה. בחר את הכתיב הנכון:\n"+name,"",c.choices,c.answer,name+" = "+answer,true);
+}
+for(let i=0;i<sentences.length;i++){
+ const {ar,he}=sentences[i],others=sentences.filter((_,j)=>j!==i);
+ const c=rotate(four(he,others.map(x=>x.he)),i);
+ add("sentences","תרגם לעברית את המשפט:",ar,c.choices,c.answer,ar+" = "+he);
+ const b=rotate(four(ar,others.map(x=>x.ar)),i+1);
+ add("sentences","בחר את המשפט בערבית שמשמעותו:\n"+he,"",b.choices,b.answer,he+" = "+ar,true);
+}
+const match=[["ביקר דאוד", "زَارَ دَاوُد"],["דאוד רצה","أَرَادَ دَاوُد"],["ארזים או ורדים","أَرْز أَوْ وَرْد"],["בית דאוד","دَار دَاوُد"]];
+for(let i=0;i<match.length;i++){
+const [he,ar]=match[i],other=match.filter((_,j)=>j!==i);
+const c=rotate(four(ar,other.map(x=>x[1])),i);
+add("sentences","התאם את הצירוף בעברית: "+he,"",c.choices,c.answer,he+" = "+ar,true);
+}
 for(let n=0;n<=10;n++){
- const distract=[(n+1)%11,(n+3)%11,(n+7)%11].map(toAr),opts=[toAr(n),...distract];
- if(new Set(opts).size===4)add("dates","בחר את המספר "+n+" בספרות ערביות:","",opts,0,n+" נכתב "+toAr(n)+".",true);
- const wrong=[(n+1)%11,(n+3)%11,(n+7)%11].map(String);
- if(new Set([String(n),...wrong]).size===4)add("dates","איזה מספר זה?",toAr(n),[String(n),...wrong],0,toAr(n)+" = "+n+".");
+ const opts=[n,...[1,2,3].map(k=>(n+k)%11)].map(toArabic),c=rotate(opts,n);
+ add("dates","איזה מספר כתוב בספרות ערביות: "+n+"?","",c.choices,c.answer,n+" = "+toArabic(n),true);
+ const d=rotate([String(n),...[1,2,3].map(k=>String((n+k)%11))],n+1);
+ add("dates","מה המספר הבא?",toArabic(n),d.choices,d.answer,toArabic(n)+" = "+n);
 }
-const dates=["27/4/1962","16/10/2026","18/11/2026","12/5/2013","5/6/2025","3/9/2012","11/1/2024","24/3/2017","8/8/2020","20/12/2019","1/1/2026","9/7/2018","13/2/2014","2/4/2008","4/10/2016","7/11/2022"];
 for(let i=0;i<dates.length;i++){
- const d=dates[i],ar=toAr(d),wrong=[toAr(dates[(i+1)%dates.length]),toAr(dates[(i+4)%dates.length]),toAr(dates[(i+7)%dates.length])];
- if(new Set([ar,...wrong]).size===4)add("dates","איך כותבים את התאריך "+d+" בספרות ערביות?","",[ar,...wrong],0,d+" = "+ar+".",true)
+ const input=dates[i],answer=toArabic(input),wrong=[input.replace(/\d(?=\d)/,x=>String((Number(x)+1)%10)),input.replace(/\d$/,x=>String((Number(x)+2)%10)),dates[1-i]].map(toArabic);
+ const c=rotate(four(answer,wrong),i);
+ add("dates","כתוב את התאריך בספרות ערביות: "+input,"",c.choices,c.answer,input+" = "+answer,true);
 }
-const $=id=>document.getElementById(id);
-const params=new URLSearchParams(location.search),topic=topicNames[params.get("topic")]?params.get("topic"):"all";
-const userKey=localStorage.getItem("studyai_active_v1")||"guest",saveKey="studyai_arabic_exam_v2_"+userKey+"_"+topic;
-$("title").textContent="🇸🇦 "+topicNames[topic];$("topicLabel").textContent=topicNames[topic];
-const allQuestions=pool.filter(q=>topic==="all"||q.topic===topic),target=topic==="all"?Math.min(90,allQuestions.length):Math.min(50,allQuestions.length);
-$("poolCount").textContent=allQuestions.length+" שאלות במאגר • "+target+" בסבב";
-function shuffle(a){let b=[...a];for(let i=b.length-1;i>0;i--){let j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]]}return b}
+const $=id=>document.getElementById(id),topicNames={all:"כל הנושאים",letters:"זיהוי וספירת אותיות",words:"אוצר מילים עמוד 33",vowels:"ניקוד וחיבור אותיות",sentences:"צירופים ותרגום",dates:"מספרים ותאריכים"};
+const topic=new URLSearchParams(location.search).get("topic"),mode=topicNames[topic]?topic:"all";
+$("title").textContent="🇸🇦 "+topicNames[mode];$("topicLabel").textContent=topicNames[mode];
+const available=questions.filter(q=>mode==="all"||q.topic===mode);
+const target=Math.min(mode==="all"?90:50,available.length);
+$("poolCount").textContent=available.length+" שאלות במאגר · "+target+" שאלות בסבב";
+function shuffle(arr){const copy=[...arr];for(let i=copy.length-1;i>0;i--){let j=Math.floor(Math.random()*(i+1));[copy[i],copy[j]]=[copy[j],copy[i]]}return copy}
+const id=localStorage.getItem("studyai_active_v1")||"guest",store="studyai_arabic_exam_grounded_v1_"+id+"_"+mode;
 let ids=[],index=0,score=0,pending=null;
-function persist(){try{localStorage.setItem(saveKey,JSON.stringify({ids,index,score,pending}))}catch(e){}}
-function reset(){let r=topic==="all"?["letters","words","vowels","sentences","dates"].flatMap(t=>shuffle(allQuestions.filter(x=>x.topic===t)).slice(0,18)):shuffle(allQuestions);ids=shuffle(r).slice(0,target).map(q=>q.id);index=0;score=0;pending=null;persist();render()}
-function restore(){try{let v=JSON.parse(localStorage.getItem(saveKey)||"null");if(v&&Array.isArray(v.ids)&&v.ids.length>0&&v.ids.every(id=>pool[id]&&allQuestions.includes(pool[id]))&&Number.isInteger(v.index)&&v.index>=0&&v.index<v.ids.length){ids=v.ids;index=v.index;score=Number(v.score)||0;pending=v.pending||null;return true}}catch(e){}return false}
+function save(){try{localStorage.setItem(store,JSON.stringify({ids,index,score,pending}))}catch(e){}}
+function reset(){
+ let pack=mode==="all"?["letters","words","vowels","sentences","dates"].flatMap(t=>shuffle(available.filter(q=>q.topic===t)).slice(0,18)):shuffle(available);
+ ids=shuffle(pack).slice(0,target).map(q=>q.id);index=0;score=0;pending=null;save();render();
+}
+function restore(){try{const v=JSON.parse(localStorage.getItem(store)||"null");if(v&&Array.isArray(v.ids)&&v.ids.length>0&&v.ids.every(n=>questions[n]&&available.includes(questions[n]))&&Number.isInteger(v.index)&&v.index>=0&&v.index<v.ids.length){ids=v.ids;index=v.index;score=v.score||0;pending=v.pending||null;return true}}catch(e){}return false}
 function render(){
-const q=pool[ids[index]];$("quiz").hidden=false;$("result").hidden=true;$("counter").textContent="שאלה "+(index+1)+" מתוך "+ids.length+" | נכונות: "+score;
-$("bar").style.width=100*index/ids.length+"%";$("prompt").textContent=q.question;$("arabicPrompt").textContent=q.arabic;$("arabicPrompt").hidden=!q.arabic;
-$("hint").textContent="נושא: "+topicNames[q.topic];$("options").replaceChildren();$("feedback").hidden=true;$("next").hidden=true;
+const q=questions[ids[index]];$("quiz").hidden=false;$("result").hidden=true;
+$("counter").textContent="שאלה "+(index+1)+" מתוך "+ids.length+" · נכונות: "+score;
+$("bar").style.width=100*index/ids.length+"%";$("prompt").textContent=q.title;
+$("arabicPrompt").textContent=q.ar;$("arabicPrompt").hidden=!q.ar;
+$("hint").textContent="נושא: "+topicNames[q.topic];$("options").replaceChildren();
+$("feedback").hidden=true;$("next").hidden=true;
 const order=pending?.order||shuffle([0,1,2,3]);
-order.forEach(n=>{let b=document.createElement("button");b.type="button";b.className="answer"+(q.arOptions?" ar":"");b.textContent=q.options[n];b.dataset.option=String(n);b.onclick=()=>{
- if(pending)return;let ok=n===q.answer;if(ok)score++;
- pending={picked:n,order};persist();showAnswer();};$("options").append(b)});
+for(const n of order){const button=document.createElement("button");button.type="button";button.className="answer"+(q.arOptions?" ar":"");
+button.textContent=q.answers[n];button.dataset.option=String(n);button.onclick=()=>{if(pending)return;pending={picked:n,order};if(n===q.correct)score++;save();showAnswer()};$("options").append(button)}
 if(pending)showAnswer()
 }
-function showAnswer(){const q=pool[ids[index]],ok=pending.picked===q.answer;
-for(const b of $("options").children){b.disabled=true;const n=Number(b.dataset.option);if(n===q.answer)b.classList.add("good");else if(n===pending.picked)b.classList.add("bad")}
-$("feedback").hidden=false;$("feedback").textContent=(ok?"✅ נכון!":"❌ התשובה הנכונה: "+q.options[q.answer])+"\n"+q.explain;
-$("next").hidden=false;$("next").textContent=index===ids.length-1?"סיום והצגת ציון":"השאלה הבאה ←"
+function showAnswer(){
+ const q=questions[ids[index]],ok=pending.picked===q.correct;
+ for(const b of $("options").children){b.disabled=true;const n=Number(b.dataset.option);if(n===q.correct)b.classList.add("good");else if(n===pending.picked)b.classList.add("bad")}
+ $("feedback").hidden=false;$("feedback").textContent=(ok?"✅ נכון!":"❌ התשובה הנכונה: "+q.answers[q.correct])+"\n"+q.explanation;
+ $("next").hidden=false;$("next").textContent=index===ids.length-1?"הצג ציון":"לשאלה הבאה ←";
 }
-$("next").onclick=()=>{index++;pending=null;if(index<ids.length){persist();render()}else{try{localStorage.removeItem(saveKey)}catch(e){}$("quiz").hidden=true;$("result").hidden=false;$("result").replaceChildren();const h=document.createElement("h2");h.textContent="🏆 סיימת את התרגול";const result=document.createElement("div");result.className="score";result.textContent=Math.round(score/ids.length*100)+"/100";const p=document.createElement("p");p.textContent="ענית נכון על "+score+" מתוך "+ids.length+" שאלות.";const restart=document.createElement("button");restart.className="button";restart.textContent="תרגול חדש";restart.onclick=reset;const back=document.createElement("a");back.className="button";back.href="arabic.html";back.textContent="חזרה לנושאים";$("result").append(h,result,p,restart,document.createTextNode(" "),back)}};
-$("reset").onclick=()=>{if(confirm("להתחיל סבב חדש? ההתקדמות בסבב הנוכחי תוחלף."))reset()};
-if(!restore())reset();else render()
-})();
-</script><script src="exam-timer.js"></script></body></html>
+$("next").onclick=()=>{
+ index++;pending=null;
+ if(index<ids.length){save();render();return}
+ try{localStorage.removeItem(store)}catch(e){}
+ $("quiz").hidden=true;$("result").hidden=false;$("result").replaceChildren();
+ const h=document.createElement("h2");h.textContent="🏆 סיימת את התרגול";
+ const n=document.createElement("div");n.className="score";n.textContent=Math.round(score/ids.length*100)+"/100";
+ const p=document.createElement("p");p.textContent="ענית נכון על "+score+" מתוך "+ids.length+" שאלות.";
+ const b=document.createElement("button");b.className="button";b.textContent="תרגול חדש";b.onclick=reset;
+ const a=document.createElement("a");a.className="button";a.textContent="חזרה לערבית";a.href="arabic.html";
+ $("result").append(h,n,p,b,document.createTextNode(" "),a);
+};
+$("reset").onclick=()=>{if(confirm("למחוק את הסבב הנוכחי ולהתחיל מחדש?"))reset()};
+if(!restore())reset();else render();
+})();</script><script src="exam-timer.js"></script></body></html>
