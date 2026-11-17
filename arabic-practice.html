@@ -36,7 +36,7 @@ const sentences=[
 {ar:"أَرَادَ دَاوُد أَرْز",he:"דאוד רצה ארזים"},
 {ar:"زَارَ دَاوُد دُرُوز",he:"דאוד ביקר דרוזים"}
 ];
-const exactSentences=["بنوت وبنات دْروز من داري","بنوت داود وبنوات دروز من داري"];
+const exactSentences=[]; // משפטי הספירה המטושטשים בתצלום הושמטו כדי לא להוסיף מילים שלא אומתו
 const dates=["27/4/1962","16/10/2026"];
 const numeral="٠١٢٣٤٥٦٧٨٩",toArabic=s=>String(s).replace(/[0-9]/g,d=>numeral[Number(d)]);
 const norm=s=>s.normalize("NFD").replace(/[\u064B-\u065F\u0670]/g,"").replace(/[أإآ]/g,"ا");
